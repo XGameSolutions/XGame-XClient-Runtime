@@ -39,7 +39,7 @@ namespace XBuild
         public void Init(string fileName)
         {
             if (m_IsInited) return;
-            var path = string.Format("{0}/{1}.log", Application.dataPath, fileName);
+            var path = string.Format("{0}/{1}.txt", Application.dataPath, fileName);
             try
             {
                 if (File.Exists(path)) File.Delete(path);
@@ -91,6 +91,10 @@ namespace XBuild
         public static void Log(string log)
         {
             Debug.Log(PackLog(log, "INFO"));
+        }
+        public static void Log(object log)
+        {
+            Debug.Log(PackLog(log.ToString(), "INFO"));
         }
 
         public static void LogError(string log)

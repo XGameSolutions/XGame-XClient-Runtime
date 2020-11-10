@@ -5,17 +5,18 @@
 /*                                        */
 /******************************************/
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace XBuild
 {
     public static class BuildHelper
     {
+        private static Regex s_VersionRegex = new Regex(@"\d+\.\d+\.\d+");
         public static void CreateDir(string path)
         {
             if (!Directory.Exists(path))
@@ -28,9 +29,19 @@ namespace XBuild
         {
             if (Directory.Exists(path))
             {
+                foreach (var file in Directory.GetFileSystemEntries(path))
+                {
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                    }
+                    else
+                    {
+                        ClearDir(file);
+                    }
+                }
                 Directory.Delete(path);
             }
-            CreateDir(path);
         }
 
         public static bool CopyDir(string sourPath, string destPath, bool createDestDirIfNotExist = true)
@@ -98,7 +109,39 @@ namespace XBuild
             {
                 param = new BuildParams();
             }
+            param.target = target;
             return param;
+        }
+
+        public static int ParseVersionCode(string version)
+        {
+            if (!s_VersionRegex.IsMatch(version))
+            {
+                BuildLog.LogError("ParseVersionCode ERROR:version format error:" + version);
+                return 0;
+            }
+            var list = version.Split('.');
+            var v1 = int.Parse(list[0]);
+            var v2 = int.Parse(list[1]);
+            var v3 = int.Parse(list[2]);
+            return v1 * 1000000 + v2 * 1000 + v3;
+        }
+
+        public static string GetTimeString()
+        {
+            DateTime now = DateTime.Now;
+            return now.ToString("yyyymmdd_HHMM", DateTimeFormatInfo.InvariantInfo);
+        }
+
+        public static string GetPackageFileNameExtention(BuildTarget target)
+        {
+            switch (target)
+            {
+                case BuildTarget.StandaloneWindows: return ".zip";
+                case BuildTarget.Android: return ".apk";
+                case BuildTarget.iOS: return ".ipa";
+                default: return "";
+            }
         }
     }
 }

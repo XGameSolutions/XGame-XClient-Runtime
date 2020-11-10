@@ -5,6 +5,8 @@
 /*                                        */
 /******************************************/
 
+using UnityEditor;
+using UnityEngine;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -13,16 +15,20 @@ namespace XBuild
     public class BuildParams
     {
         private static readonly Regex regex = new Regex(@"\{?(\w+[=|:]\w+,)*\w+[=|:]\w+\}?");
+        private static readonly Regex s_IntRex = new Regex(@"\d+");
+
         private static StringBuilder sb = new StringBuilder();
 
+        public BuildTarget target { get; internal set; }
         public string apkVersion;
         public string resVersion;
         public string productName;
         public string applicationIdentifier;
-        public int bundleVersionCode;
+        public string bundleVersionCode;
         public string appleDeveloperTeamID;
-        public string apkFileName;
+        public string fileNameFormatter;
         public string companyName;
+        public string branch;
 
         public bool isDebug;
         public string startScene;
@@ -31,11 +37,12 @@ namespace XBuild
         {
             var buildCfg = BuildConfig.GetConfig();
             productName = buildCfg.productName;
-            apkFileName = buildCfg.apkFileName;
+            fileNameFormatter = buildCfg.fileNameFormatter;
             applicationIdentifier = buildCfg.applicationIdentifier;
             apkVersion = "0.1.0";
             resVersion = "0.1.0";
             appleDeveloperTeamID = "teamId";
+            branch = "master";
             companyName = buildCfg.companyName;
 
             isDebug = false;
@@ -50,15 +57,47 @@ namespace XBuild
             sb.AppendFormat("apkVersion={0}\n", apkVersion);
             sb.AppendFormat("resVersion={0}\n", apkVersion);
             sb.AppendFormat("applicationIdentifier={0}\n", applicationIdentifier);
-            sb.AppendFormat("bundleVersionCode={0}\n", applicationIdentifier);
+            sb.AppendFormat("bundleVersionCode={0}\n", bundleVersionCode);
             sb.AppendFormat("appleDeveloperTeamID={0}\n", appleDeveloperTeamID);
-            sb.AppendFormat("apkFileName={0}\n", apkFileName);
+            sb.AppendFormat("fileNameFormatter={0}\n", fileNameFormatter);
             sb.AppendFormat("companyName={0}\n", companyName);
+            sb.AppendFormat("branch={0}\n", branch);
 
             sb.AppendFormat("isDebug={0}\n", isDebug);
             sb.AppendFormat("startScene={0}\n", startScene);
 
             return sb.ToString();
+        }
+
+        public int GetVersionCode()
+        {
+            if (string.IsNullOrEmpty(bundleVersionCode))
+            {
+                return BuildHelper.ParseVersionCode(apkVersion);
+            }
+            else
+            {
+                return int.Parse(bundleVersionCode);
+            }
+        }
+
+        public string GetFileName()
+        {
+            if (!string.IsNullOrEmpty(fileNameFormatter))
+            {
+                var fileName = fileNameFormatter;
+                if (fileName.IndexOf("{time}") >= 0) fileName = fileName.Replace("{time}", BuildHelper.GetTimeString());
+                if (fileName.IndexOf("{apkVersion}") >= 0) fileName = fileName.Replace("{apkVersion}", apkVersion);
+                if (fileName.IndexOf("{branch}") >= 0) fileName = fileName.Replace("{branch}", branch);
+                return fileName + BuildHelper.GetPackageFileNameExtention(target);
+            }
+            return productName + BuildHelper.GetPackageFileNameExtention(target);
+        }
+
+        public string GetLocationPathName()
+        {
+            if (target == BuildTarget.StandaloneWindows) return productName;
+            else return GetFileName();
         }
 
         public static BuildParams Parse(string strParams)
@@ -79,10 +118,10 @@ namespace XBuild
                 else if (key.Equals("apkVersion")) param.apkVersion = value;
                 else if (key.Equals("resVersion")) param.resVersion = value;
                 else if (key.Equals("applicationIdentifier")) param.resVersion = value;
-                else if (key.Equals("bundleVersionCode")) param.bundleVersionCode = ParseInt(value);
+                else if (key.Equals("bundleVersionCode") && IsInt(value)) param.bundleVersionCode = value;
                 else if (key.Equals("isDebug")) param.isDebug = ParseBool(value);
                 else if (key.Equals("appleDeveloperTeamID")) param.appleDeveloperTeamID = value;
-                else if (key.Equals("apkFileName")) param.apkFileName = value;
+                else if (key.Equals("apkFileName")) param.fileNameFormatter = value;
                 else if (key.Equals("companyName")) param.companyName = value;
             }
             return param;
@@ -101,6 +140,11 @@ namespace XBuild
         {
             if (int.TryParse(value, out int test)) return test;
             else return 0;
+        }
+
+        private static bool IsInt(string input)
+        {
+            return s_IntRex.IsMatch(input);
         }
     }
 }
