@@ -22,8 +22,9 @@ namespace XBuild
         public string startSceneInitObjectPath = "init";
         public string productName = "xgame";
         public string companyName = "monitor1394";
-        public string fileNameFormatter = "xgame_{time}_{apkVersion}_{branch}";
+        public string fileNameFormatter = "xgame_{time}_{version}_{branch}";
         public string applicationIdentifier = "com.monitor1394.xgame";
+        public string appleDeveloperTeamID = "";
 
         public static BuildConfig GetConfig()
         {

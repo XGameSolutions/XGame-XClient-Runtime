@@ -11,11 +11,15 @@ using System.IO;
 using System;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace XBuild
 {
     public static class BuildHelper
     {
+        private const BindingFlags s_StaticMembers = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         private static Regex s_VersionRegex = new Regex(@"\d+\.\d+\.\d+");
         public static void CreateDir(string path)
         {
@@ -44,8 +48,14 @@ namespace XBuild
             }
         }
 
-        public static bool CopyDir(string sourPath, string destPath, bool createDestDirIfNotExist = true)
+        private static List<string> s_filterList = new List<string>();
+        public static bool CopyDir(string sourPath, string destPath, string filters = null)
         {
+            s_filterList.Clear();
+            if (!string.IsNullOrEmpty(filters))
+            {
+                foreach (var f in filters.Split('|')) s_filterList.Add(f);
+            }
             var sourDir = new DirectoryInfo(sourPath);
             var destDir = new DirectoryInfo(destPath);
             if (!sourDir.Exists)
@@ -55,22 +65,34 @@ namespace XBuild
             }
             if (!destDir.Exists)
             {
-                if (createDestDirIfNotExist) destDir.Create();
-                else
-                {
-                    BuildLog.LogError("BuildHelper.CopyDir ERROR: destPath not exist:" + sourPath);
-                    return false;
-                }
+                destDir.Create();
             }
             foreach (var file in sourDir.GetFiles())
             {
-                CopyFile(file.FullName, destPath);
+                if (!IsInFilterList(s_filterList, file.Name))
+                {
+                    CopyFile(file.FullName, destPath);
+                }
             }
             foreach (var dir in sourDir.GetDirectories())
             {
-                CopyDir(dir.FullName, destDir.FullName + "/" + dir.Name, createDestDirIfNotExist);
+                if (!IsInFilterList(s_filterList, dir.Name))
+                {
+                    CopyDir(dir.FullName, destDir.FullName + "/" + dir.Name, filters);
+                }
             }
             return true;
+        }
+
+        private static bool IsInFilterList(List<string> filterList, string path)
+        {
+            if (path.StartsWith(".")) return true;
+            if (filterList.Count == 0) return false;
+            foreach (var filter in filterList)
+            {
+                if (path.Contains(filter)) return true;
+            }
+            return false;
         }
 
         public static bool CopyFile(string sourFilePath, string destDir, bool checkExists = true)
@@ -142,6 +164,71 @@ namespace XBuild
                 case BuildTarget.iOS: return ".ipa";
                 default: return "";
             }
+        }
+
+        public static string RunCmd(string cmd)
+        {
+            Process p = new Process();
+            p.StartInfo.FileName = "cmd.exe";
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardInput = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.Arguments = "/C " + cmd;
+            try
+            {
+                p.Start();
+                p.WaitForExit();
+                return p.StandardOutput.ReadToEnd();
+            }
+            catch (Exception e)
+            {
+                p.Close();
+                return e.Message;
+            }
+        }
+
+        public static string RunBash(string cmd)
+        {
+            cmd = cmd.Replace("\"", "\\\"");
+            Process p = new Process();
+            p.StartInfo.FileName = "/bin/bash";
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardInput = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.Arguments = string.Format("-c \"{0}\"", cmd);
+            try
+            {
+                p.Start();
+                p.WaitForExit();
+                return p.StandardOutput.ReadToEnd();
+            }
+            catch (Exception e)
+            {
+                p.Close();
+                return e.Message;
+            }
+        }
+
+        public static Assembly EditorAssembly
+        {
+            get
+            {
+                return typeof(EditorWindow).Assembly;
+            }
+        }
+
+        public static System.Object RefectionInvoke(Assembly assembly, string className, string methodName,
+            System.Object obj, Type[] types, params System.Object[] parameters)
+        {
+            var T = assembly.GetType(className);
+            BuildLog.Log(T);
+            var method = T.GetMethod(methodName, s_StaticMembers, null, types, null);
+            BuildLog.Log(method);
+            return method.Invoke(obj, parameters);
         }
     }
 }

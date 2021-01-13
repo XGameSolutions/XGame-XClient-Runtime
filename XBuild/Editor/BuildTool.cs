@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+#if UNITY_EDITOR_OSX
+using UnityEditor.iOS.Xcode;
+#endif
 using System.IO;
 
 namespace XBuild
@@ -120,6 +123,10 @@ namespace XBuild
             BuildCallback.OnBeforeBuildPackage(param);
             var flag = BuildPlayer(param);
             BuildCallback.OnAfterBuildPackage(param, flag);
+            if (flag)
+            {
+                BuildXCodeProject(param);
+            }
         }
 
         private static void BuildAB(BuildParams param, bool onlyBuildAB)
@@ -143,17 +150,16 @@ namespace XBuild
                 return false;
             }
             BuildHelper.ClearDir(destAbPath);
-            BuildHelper.CopyDir(sourAbPath, destAbPath);
+            BuildHelper.CopyDir(sourAbPath, destAbPath, ".manifest|.meta");
 
             PlayerSettings.productName = param.productName;
             PlayerSettings.companyName = param.companyName;
             PlayerSettings.applicationIdentifier = param.applicationIdentifier;
-            PlayerSettings.bundleVersion = param.apkVersion;
+            PlayerSettings.bundleVersion = param.version;
             PlayerSettings.Android.bundleVersionCode = param.GetVersionCode();
             PlayerSettings.iOS.buildNumber = param.GetVersionCode().ToString();
             PlayerSettings.iOS.appleEnableAutomaticSigning = true;
             PlayerSettings.iOS.appleDeveloperTeamID = param.appleDeveloperTeamID;
-
             BuildPlayerOptions op = new BuildPlayerOptions();
             op.scenes = new[] { param.startScene };
             op.locationPathName = param.GetLocationPathName();
@@ -173,6 +179,32 @@ namespace XBuild
                 return false;
             }
             return true;
+        }
+
+        private static void BuildXCodeProject(BuildParams param)
+        {
+#if UNITY_EDITOR_OSX
+            if (param.target != BuildTarget.iOS) return;
+            var xcodeprojPath = Application.dataPath + "/../xgame/Unity-iPhone.xcodeproj";
+            var projPath = xcodeprojPath + "/project.pbxproj";
+            if (!File.Exists(projPath))
+            {
+                BuildLog.LogError("xcode project path ERROR:" + projPath);
+                return;
+            }
+            PBXProject proj = new PBXProject();
+            proj.ReadFromFile(projPath);
+            BuildLog.Log("open xcode project:" + proj);
+            var target = proj.GetUnityMainTargetGuid();
+
+            File.WriteAllText(projPath, proj.WriteToString());
+            //BuildHelper.RunBash("open -a Xcode " + xcodeprojPath);
+            var askForBuildLocation = false;
+            // BuildHelper.RefectionInvoke(BuildHelper.EditorAssembly, "UnityEditor.BuildPlayerWindow",
+            //     "BuildPlayerAndRun", null, new Type[] { }, null);
+            BuildHelper.RefectionInvoke(BuildHelper.EditorAssembly, "UnityEditor.BuildPlayerWindow",
+                "BuildPlayerAndRun", null, new Type[] { typeof(bool) }, new object[] { askForBuildLocation });
+#endif
         }
     }
 }
