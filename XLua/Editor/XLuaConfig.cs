@@ -90,6 +90,11 @@ public static class XLuaConfig
                 new List<string>(){"System.IO.DirectoryInfo", "CreateSubdirectory", "System.String", "System.Security.AccessControl.DirectorySecurity"},
                 new List<string>(){"System.IO.DirectoryInfo", "Create", "System.Security.AccessControl.DirectorySecurity"},
                 new List<string>(){"UnityEngine.MonoBehaviour", "runInEditMode"},
+                new List<string>(){"UnityEngine.AnimatorControllerParameter", "name"},
+                new List<string>(){"UnityEngine.Texture", "imageContentsHash"},
+                new List<string>(){"UnityEngine.UI.Text", "OnRebuildRequested"},
+                new List<string>(){"UnityEngine.Input", "IsJoystickPreconfigured", "System.String"},
+                new List<string>(){"UnityEngine.UI.Graphic", "OnRebuildRequested"},
             };
 
     private static List<string> s_UnityExclude = new List<string> {
@@ -129,12 +134,11 @@ public static class XLuaConfig
         "ClusterInput", "Motion",
         "UnityEngine.UI.ReflectionMethodsCache", "NativeLeakDetection",
         "NativeLeakDetectionMode", "WWWAudioExtensions", "UnityEngine.Experimental",
-        "HashUnsafeUtilities",
-        "Rigidbody2D",
-        "TrailRenderer",
-        "ParticleSystem",
-        "SystemRenderer",
-        "LineRenderer"
+        "HashUnsafeUtilities","Rigidbody2D",
+        "TrailRenderer","ParticleSystem","SystemRenderer",
+        "LineRenderer","AudioSettings","DrivenRectTransformTracker",
+        "LightProbeGroup","MeshRenderer","Light",
+        "QualitySettings","DefaultControls","Graphic"
     };
 
     private static bool IsUnityExcluded(Type type)
