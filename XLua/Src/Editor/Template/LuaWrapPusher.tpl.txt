@@ -13,7 +13,7 @@ using System;
 require "TemplateCommon"
 %>
 
-Namespace XLua
+namespace XLua
 {
     public partial class ObjectTranslator
     {
@@ -76,7 +76,7 @@ Namespace XLua
 			end
 			if type_info.Flag == CS.XLua.OptimizeFlag.PackAsTable then
 			%>
-			var translator = this;
+			<%if PushObjectNeedTranslator(type_info) then %>    ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);<%end%>
 			LuaAPI.xlua_pushcstable(L, <%=type_info.FieldInfos.Count%>, <%=type_id_var_name%>);
 			<%ForEachCsList(type_info.FieldInfos, function(fieldInfo)%>
 			LuaAPI.xlua_pushasciistring(L, "<%=fieldInfo.Name%>");

@@ -13,7 +13,7 @@ using System;
 require "TemplateCommon"
 %>
 
-Namespace XLua
+namespace XLua
 {
     public static partial class CopyByValue
     {

@@ -18,9 +18,8 @@ namespace XGame
 
         internal static void OnBeforeBuildPackage(BuildParams buildParam)
         {
-            var buildConfig = BuildConfig.GetConfig();
             EditorSceneManager.OpenScene(buildParam.startScene);
-            var init = GameObject.Find(buildConfig.startSceneInitObjectPath);
+            var init = GameObject.Find(BuildConfig.startSceneInitObjectPath);
             if (init != null)
             {
                 var startScript = init.gameObject.GetComponent<GameStart>();

@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class ABMgr : MonoSingleton<ABMgr>
 {
-    private const string EDITOR_AB_DIR = "Res_AB";
-    private static AssetBundle s_AbLua;
-    private static AssetBundle s_AbCfg;
+    private const string EDITOR_AB_DIR = "ResAB";
+    private static AssetBundle s_ABLua;
+    private static AssetBundle s_ABCfg;
 
     public static string patchPath;
     public static string abPath;
@@ -44,9 +44,9 @@ public class ABMgr : MonoSingleton<ABMgr>
         }
     }
 
-    public static AssetBundle LoadAb(string abName)
+    public static AssetBundle LoadAB(string abName)
     {
-        var path = Application.dataPath + "/../Res_AB/" + abName;
+        var path = string.Format("{0}/../{1}/{2}", Application.dataPath, EDITOR_AB_DIR, abName);
         return AssetBundle.LoadFromFile(path);
     }
 

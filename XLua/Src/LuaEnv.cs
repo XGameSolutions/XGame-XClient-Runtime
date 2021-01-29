@@ -21,11 +21,12 @@ namespace XLua
 {
     using System;
     using System.Collections.Generic;
-    using System.Reflection;
-    using UnityEngine;
 
     public class LuaEnv : IDisposable
     {
+        public const string CSHARP_NAMESPACE = "xlua_csharp_namespace";
+        public const string MAIN_SHREAD = "xlua_main_thread";
+
         internal RealStatePtr rawL;
 
         internal RealStatePtr L
@@ -47,7 +48,7 @@ namespace XLua
         internal int errorFuncRef = -1;
 
 #if THREAD_SAFE || HOTFIX_ENABLE
-        internal static object luaLock = new object();
+        internal /*static*/ object luaLock = new object();
 
         internal object luaEnvLock
         {
@@ -58,7 +59,7 @@ namespace XLua
         }
 #endif
 
-        const int LIB_VERSION_EXPECT = 104;
+        const int LIB_VERSION_EXPECT = 105;
 
         public LuaEnv()
         {
@@ -70,8 +71,8 @@ namespace XLua
 
 #if THREAD_SAFE || HOTFIX_ENABLE
             lock(luaEnvLock)
-            {
 #endif
+            {
                 LuaIndexes.LUA_REGISTRYINDEX = LuaAPI.xlua_get_registry_index();
 #if GEN_CODE_MINIMIZE
                 LuaAPI.xlua_set_csharp_wrapper_caller(InternalGlobals.CSharpWrapperCallerPtr);
@@ -82,11 +83,7 @@ namespace XLua
                 //Init Base Libs
                 LuaAPI.luaopen_xlua(rawL);
                 LuaAPI.luaopen_i64lib(rawL);
-                LuaAPI.luaopen_perflib(rawL);
 
-                //TODO:
-                //LuaAPI.xdInit(rawL);
-                //LuaAPI.xdRegistFunc(rawL);
                 translator = new ObjectTranslator(this, rawL);
                 translator.createFunctionMetatable(rawL);
                 translator.OpenLib(rawL);
@@ -114,8 +111,12 @@ namespace XLua
                 DoString(init_xlua, "Init");
                 init_xlua = null;
 
+#if !UNITY_SWITCH || UNITY_EDITOR
                 AddBuildin("socket.core", StaticLuaCallbacks.LoadSocketCore);
                 AddBuildin("socket", StaticLuaCallbacks.LoadSocketCore);
+#endif
+
+                AddBuildin("CS", StaticLuaCallbacks.LoadCS);
 
                 LuaAPI.lua_newtable(rawL); //metatable of indexs and newindexs functions
                 LuaAPI.xlua_pushasciistring(rawL, "__index");
@@ -148,16 +149,24 @@ namespace XLua
 
                 LuaAPI.lua_pop(rawL, 1); // pop metatable of indexs and newindexs functions
 
-                LuaAPI.xlua_pushasciistring(rawL, "xlua_main_thread");
+                LuaAPI.xlua_pushasciistring(rawL, MAIN_SHREAD);
                 LuaAPI.lua_pushthread(rawL);
                 LuaAPI.lua_rawset(rawL, LuaIndexes.LUA_REGISTRYINDEX);
+
+                LuaAPI.xlua_pushasciistring(rawL, CSHARP_NAMESPACE);
+                if (0 != LuaAPI.xlua_getglobal(rawL, "CS"))
+                {
+                    throw new Exception("get CS fail!");
+                }
+                LuaAPI.lua_rawset(rawL, LuaIndexes.LUA_REGISTRYINDEX);
+
 #if !XLUA_GENERAL && (!UNITY_WSA || UNITY_EDITOR)
                 translator.Alias(typeof(Type), "System.MonoType");
 #endif
 
-            if (0 != LuaAPI.xlua_getglobal(rawL, "_G"))
+                if (0 != LuaAPI.xlua_getglobal(rawL, "_G"))
                 {
-                    throw new Exception("call xlua_getglobal fail!");
+                    throw new Exception("get _G fail!");
                 }
                 translator.Get(rawL, -1, out _G);
                 LuaAPI.lua_pop(rawL, 1);
@@ -175,9 +184,7 @@ namespace XLua
                 translator.CreateArrayMetatable(rawL);
                 translator.CreateDelegateMetatable(rawL);
                 translator.CreateEnumerablePairs(rawL);
-#if THREAD_SAFE || HOTFIX_ENABLE
             }
-#endif
         }
 
         private static List<Action<LuaEnv, ObjectTranslator>> initers = null;
@@ -329,13 +336,11 @@ namespace XLua
 
         public void Tick()
         {
-            //TODO:
-            //LuaAPI.xdRunOnce();
 #if THREAD_SAFE || HOTFIX_ENABLE
             lock (luaEnvLock)
             {
 #endif
-            var _L = L;
+                var _L = L;
                 lock (refQueue)
                 {
                     while (refQueue.Count > 0)
@@ -352,7 +357,7 @@ namespace XLua
 #endif
         }
 
-        //ï¿½ï¿½ï¿½ï¿½API
+        //¼æÈÝAPI
         public void GC()
         {
             Tick();
@@ -460,6 +465,7 @@ namespace XLua
             local rawget = rawget
             local setmetatable = setmetatable
             local import_type = xlua.import_type
+            local import_generic_type = xlua.import_generic_type
             local load_assembly = xlua.load_assembly
 
             function metatable:__index(key) 
@@ -481,9 +487,21 @@ namespace XLua
                 return obj
             end
 
+            function metatable:__newindex()
+                error('No such type: ' .. rawget(self,'.fqn'), 2)
+            end
+
             -- A non-type has been called; e.g. foo = System.Foo()
             function metatable:__call(...)
-                error('No such type: ' .. rawget(self,'.fqn'), 2)
+                local n = select('#', ...)
+                local fqn = rawget(self,'.fqn')
+                if n > 0 then
+                    local gt = import_generic_type(fqn, ...)
+                    if gt then
+                        return rawget(CS, gt)
+                    end
+                end
+                error('No such type: ' .. fqn, 2)
             end
 
             CS = CS or {}
@@ -549,6 +567,7 @@ namespace XLua
                         end
                     end)
                 end
+                xlua.private_accessible(cs)
             end
             xlua.getmetatable = function(cs)
                 return xlua.metatable_operation(cs)
@@ -566,7 +585,7 @@ namespace XLua
                     local csobj = t['__csobj']
                     local func = csobj['<>xLuaBaseProxy_'..k]
                     return function(_, ...)
-                         func(csobj, ...)
+                         return func(csobj, ...)
                     end
                 end
             }
@@ -579,8 +598,8 @@ namespace XLua
 
         internal List<CustomLoader> customLoaders = new List<CustomLoader>();
 
-        //loader : CustomLoaderï¿½ï¿½ filepathï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½refï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½requireï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÖ§ï¿½Öµï¿½ï¿½Ô£ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ÊµÂ·ï¿½ï¿½ï¿½ï¿½
-        //                        ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½nullï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½Ô´ï¿½ï¿½ï¿½Þºï¿½ï¿½Êµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò·µ»ï¿½UTF8ï¿½ï¿½ï¿½ï¿½ï¿½byte[]
+        //loader : CustomLoader£¬ filepath²ÎÊý£º£¨refÀàÐÍ£©ÊäÈëÊÇrequireµÄ²ÎÊý£¬Èç¹ûÐèÒªÖ§³Öµ÷ÊÔ£¬ÐèÒªÊä³öÕæÊµÂ·¾¶¡£
+        //                        ·µ»ØÖµ£ºÈç¹û·µ»Ønull£¬´ú±í¼ÓÔØ¸ÃÔ´ÏÂÎÞºÏÊÊµÄÎÄ¼þ£¬·ñÔò·µ»ØUTF8±àÂëµÄbyte[]
         public void AddLoader(CustomLoader loader)
         {
             customLoaders.Add(loader);
