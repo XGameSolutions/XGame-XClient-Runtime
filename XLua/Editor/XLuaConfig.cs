@@ -138,7 +138,8 @@ public static class XLuaConfig
         "TrailRenderer","ParticleSystem","SystemRenderer",
         "LineRenderer","AudioSettings","DrivenRectTransformTracker",
         "LightProbeGroup","MeshRenderer","Light",
-        "QualitySettings","DefaultControls","Graphic"
+        "QualitySettings","DefaultControls","Graphic",
+        "Caching"
     };
 
     private static bool IsUnityExcluded(Type type)
