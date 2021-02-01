@@ -1,23 +1,25 @@
 
 
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using XBuild;
+using XBuild.AB;
 
 namespace XGame
 {
-    /// <summary>
-    /// XBuild的一些定制
-    /// </summary>
+    [InitializeOnLoad]
     public static class BuildCustom
     {
         static BuildCustom()
         {
-            BuildCallback.RegisterBeforeBuildPackageCallback(OnBeforeBuildPackage);
+            BuildAPI.RegisterBeforeBuildPackageCallback(OnBeforeBuildPackage);
+            ABAPI.RegisterLoadAssetBundle(LoadAssetBundle);
         }
 
         internal static void OnBeforeBuildPackage(BuildParams buildParam)
         {
+            //GenXLua();
             EditorSceneManager.OpenScene(buildParam.startScene);
             var init = GameObject.Find(BuildConfig.startSceneInitObjectPath);
             if (init != null)
@@ -28,6 +30,17 @@ namespace XGame
                 startScript.IsAbCfg = true;
                 EditorSceneManager.SaveOpenScenes();
             }
+        }
+
+        private static void GenXLua()
+        {
+            CSObjectWrapEditor.Generator.ClearAll();
+            CSObjectWrapEditor.Generator.GenAll();
+        }
+
+        private static AssetBundle LoadAssetBundle(string path)
+        {
+            return AssetBundle.LoadFromFile(path);
         }
     }
 }
