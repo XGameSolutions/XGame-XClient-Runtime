@@ -24,10 +24,10 @@ namespace XGame
             var init = GameObject.Find(BuildConfig.startSceneInitObjectPath);
             if (init != null)
             {
-                var startScript = init.gameObject.GetComponent<GameStart>();
-                startScript.IsAbRes = true;
-                startScript.IsAbLua = true;
-                startScript.IsAbCfg = true;
+                var app = init.gameObject.GetComponent<App>();
+                app.IsAbRes = true;
+                app.IsAbLua = true;
+                app.IsAbCfg = true;
                 EditorSceneManager.SaveOpenScenes();
             }
         }

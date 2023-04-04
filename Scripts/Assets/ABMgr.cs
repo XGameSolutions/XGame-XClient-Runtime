@@ -1,7 +1,8 @@
 
 using UnityEngine;
+using XCommon.Runtime;
 
-public class ABMgr : MonoSingleton<ABMgr>
+public class ABMgr : XMonoSingleton<ABMgr>
 {
     private const string EDITOR_AB_DIR = "ResAB";
     private static AssetBundle s_ABLua;
@@ -32,14 +33,14 @@ public class ABMgr : MonoSingleton<ABMgr>
         {
             abPlatform = "StandaloneWindows";
             protocal = "file:///";
-            abPath = string.Format("{0}/../{1}/{2}/", Application.dataPath, EDITOR_AB_DIR, abPlatform);
+            abPath = string.Format("{0}/../{1}/{2}/{3}/", Application.dataPath, EDITOR_AB_DIR, abPlatform, abPlatform);
             patchPath = string.Format("{0}/../patch/", Application.dataPath);
         }
         else if (Application.platform == RuntimePlatform.OSXEditor)
         {
             abPlatform = "StandaloneOSX";
             protocal = "file://";
-            abPath = string.Format("{0}/../{1}/{2}/", Application.dataPath, EDITOR_AB_DIR, abPlatform);
+            abPath = string.Format("{0}/../{1}/{2}/{3}/", Application.dataPath, EDITOR_AB_DIR, abPlatform, abPlatform);
             patchPath = string.Format("{0}/../patch/", Application.dataPath);
         }
     }
@@ -56,11 +57,11 @@ public class ABMgr : MonoSingleton<ABMgr>
         {
 
         }
-        if (GameStart.Instance.IsAbLua)
+        if (App.Instance.IsAbLua)
         {
 
         }
-        if (GameStart.Instance.IsAbCfg)
+        if (App.Instance.IsAbCfg)
         {
 
         }

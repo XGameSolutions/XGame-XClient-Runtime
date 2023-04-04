@@ -5,7 +5,8 @@ using XDebug;
 
 public class Test : MonoBehaviour
 {
-    private void Awake() {
+    private void Awake()
+    {
         var count = XLog.Instance;
     }
 }

@@ -5,8 +5,9 @@ using System;
 using System.IO;
 using UnityEngine;
 using XLua;
+using XCommon.Runtime;
 
-public class XLuaMgr : MonoSingleton<XLuaMgr>
+public class XLuaMgr : XMonoSingleton<XLuaMgr>
 {
     private LuaEnv m_LuaEnv;
     private Action<float, float> m_LuaUpdate;

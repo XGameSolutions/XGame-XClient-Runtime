@@ -2,10 +2,12 @@
 using UnityEngine;
 using XLua;
 using XDebug;
+using XRemoteDebug;
+using XCommon.Runtime;
 
-public class GameStart : MonoSingleton<GameStart>
+public class App : XMonoSingleton<App>
 {
-    public int pkgType = 0;
+    public int type = 0;
     public bool IsAbRes = false;
     public bool IsAbLua = false;
     public bool IsAbCfg = false;
@@ -23,7 +25,9 @@ public class GameStart : MonoSingleton<GameStart>
         XLog.Instance.Init();
         ABMgr.Instance.Init();
         XLuaMgr.Instance.Init();
+        RemoteDebugClient.Instance.Init();
     }
+
 
     public override void Startup()
     {
