@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf303135b39ff490fab83ecd8a801925, type: 3}
+  m_Name: RemoteDebugConfig
+  m_EditorClassIdentifier: 
+  m_ClientX: 150
+  m_ClientY: 300
+  m_ClientWidth: 150
+  m_ClientHeight: 50
+  m_SocketUploadFileBufferSize: 1048576
+  m_Port: 16666
+  m_ServerInfos:
+  - name: "\u672C\u5730\u670D"
+    ip: 127.0.0.1
+  - name: "\u5E86\u8D1E\u670D"
+    ip: 172.20.10.5

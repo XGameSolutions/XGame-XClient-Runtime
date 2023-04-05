@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f289dfcc5d784424a7ad344c539f44b, type: 3}
+  m_Name: ABConfig
+  m_EditorClassIdentifier: 
+  AB_DIR: ../ResAB
+  dep: _dep_
+  ab_prefix_shader: shader
+  ab_prefix_model: model_
+  ab_prefix_model_fx: model_fx
+  ab_prefix_model_character: model_role_
+  ab_prefix_model_weapon: model_weapon_
+  ab_prefix_model_monster: model_monster_
+  ab_prefix_model_scene: model_scene_
+  ab_prefix_model_other: model_other_
+  ab_prefix_model_dep: model_dep_
+  ab_prefix_model_dep_common_tex: model_dep_common_tex_
+  ab_prefix_model_dep_material: model_dep_mat_
+  ab_prefix_scene: scene_
+  ab_prefix_scene_dep: scene_dep_
+  ab_prefix_scene_dep_meterial: scene_dep_mat_
+  ab_prefix_scene_dep_prefab: scene_dep_prefab_
+  ab_prefix_scene_dep_meterial_common_tex: scene_dep_mat_common_tex_
+  ab_prefix_scene_dep_common_tex: scene_dep_common_tex_
+  ab_prefix_scene_dep_common_asset: scene_dep_common_asset_
+  ab_prefix_scene_dep_common_prefab: scene_dep_common_prefab_
+  ab_prefix_ui: ui_
+  ab_prefix_ui_big_image: ui_big_image_
+  res_dir_model: Assets/ResModel
+  res_dir_model_fx: Assets/ResModel/Effects
+  res_dir_model_charater: Assets/ResModel/Character
+  res_dir_model_weapon: Assets/ResModel/Weapon
+  res_dir_model_monster: Assets/ResModel/Monster
+  res_dir_model_other: Assets/ResModel/Other
+  res_dir_scene: Assets/ResScene
+  res_dir_ui: Assets/ResUI
+  res_dir_ui_big_image: Assets/ResUI/big_image
+  ab_dep_single_size_limit_material: 209715.2
+  ab_dep_single_size_limit_model: 1048576
+  ab_dep_single_size_limit_scene: 1048576
+  common_dep_index_max: 5
+  common_ab_list:
+  - shader
+  file_suffix_material:
+  - .mat
+  file_suffix_prefab:
+  - .prefab
+  file_suffix_fbx:
+  - .fbx
+  - .st
+  - .obj
+  file_suffix_script:
+  - .cs
+  file_suffix_shader:
+  - .shader
+  file_suffix_asset:
+  - .asset
+  file_suffix_texture:
+  - .tga
+  - .png
+  - .psd
+  - .tif
+  - .tiff
+  - .dds
+  - .jpeg
+  - .jpg
+  - .gif
+  - .bmp
+  - .exr
+  - .hdr
+  file_suffix_exclude:
+  - .cs

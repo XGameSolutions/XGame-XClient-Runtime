@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ed211ad94187473983b2423ccfea892, type: 3}
+  m_Name: BuildConfig
+  m_EditorClassIdentifier: 
+  m_CodeName: xgame
+  m_ABDir: ResAB/
+  m_ABDirRelativeToDataPath: /../ResAB/
+  m_StartScenePath: Assets/Plugins/start.unity
+  m_StartSceneInitObjectPath: init
+  m_ProductName: xgame
+  m_CompanyName: monitor1394
+  m_FileNameFormatter: xgame_{time}_{version}_{branch}
+  m_ApplicationIdentifier: com.monitor1394.xgame
+  m_AppleDeveloperTeamID: 
